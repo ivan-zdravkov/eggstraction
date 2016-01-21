@@ -15,9 +15,10 @@ public class CharacterController : MonoBehaviour {
     private Camera camera;
     private GameObject sky;
     private PositionTreshholds positionTreshholds;
+    private LevelGenerator levelGenerator;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
         this.camera = Camera.main;
         this.sky = GameObject.Find("Sky");
 
@@ -26,7 +27,8 @@ public class CharacterController : MonoBehaviour {
 
         this.scale = new Vector3(Screen.width / defaultWidth, Screen.height / defaultHeight, 1f);
 
-        positionTreshholds = new PositionTreshholds(25, 25);
+        this.positionTreshholds = new PositionTreshholds(25, 25);
+        this.levelGenerator = new LevelGenerator(0.7f, 100);
 
         this.UpdatePositionThresholds();
     }
@@ -42,6 +44,8 @@ public class CharacterController : MonoBehaviour {
             this.scale = new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f);
 
             this.UpdatePositionThresholds();
+
+            this.levelGenerator.GenerateInnitialLevel(4);
 
             //TODO Resize all sprites!
             //sprite.transform.scale = Vector3.Scale(sprite.transform.scale, scale);
