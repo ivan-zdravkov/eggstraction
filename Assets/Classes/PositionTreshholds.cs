@@ -65,8 +65,13 @@ namespace Assets.Classes
 
         public PositionTreshholds(int horizontalTreshholdPercentage, int verticalTreshholdPercentage)
         {
-            this.horizontalTreshhold = horizontalTreshholdPercentage / 100.0f;
-            this.verticalTreshhold = verticalTreshholdPercentage / 100.0f;
+            if (horizontalTreshholdPercentage < 0 || horizontalTreshholdPercentage > 50 || verticalTreshholdPercentage < 0 || verticalTreshholdPercentage > 50)
+            {
+                throw new ArgumentException("The threshholds must be between 0 and 50.");
+            }
+
+            this.horizontalTreshhold = ((50 - horizontalTreshholdPercentage) / 100.0f);
+            this.verticalTreshhold = ((50 - verticalTreshholdPercentage) / 100.0f);
         }
 
         public void UpdateTreshholds (float upper, float lower, float left, float right)

@@ -4,17 +4,27 @@ using Assets.Classes;
 using System;
 
 public class CharacterController : MonoBehaviour {
+    private const float defaultWidth = 3840.0f;
+    private const float defaultHeight = 2160.0f;
+    private const float moveSpeed = 0.05f;
+
+    private float cameraWidth;
+    private float cameraHeight;
+
+    private Vector3 scale;
     private Camera camera;
     private GameObject sky;
-
     private PositionTreshholds positionTreshholds;
-
-    private const float moveSpeed = 0.05f;
 
 	// Use this for initialization
 	void Start () {
         this.camera = Camera.main;
         this.sky = GameObject.Find("Sky");
+
+        this.cameraHeight = 2f * this.camera.orthographicSize;
+        this.cameraWidth = cameraHeight * this.camera.aspect;
+
+        this.scale = new Vector3(Screen.width / defaultWidth, Screen.height / defaultHeight, 1f);
 
         positionTreshholds = new PositionTreshholds(25, 25);
 
@@ -23,6 +33,22 @@ public class CharacterController : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
+        #region CheckResize
+        if (this.scale != new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f))
+        {
+            this.cameraHeight = 2f * this.camera.orthographicSize;
+            this.cameraWidth = cameraHeight * this.camera.aspect;
+
+            this.scale = new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f);
+
+            this.UpdatePositionThresholds();
+
+            //TODO Resize all sprites!
+            //sprite.transform.scale = Vector3.Scale(sprite.transform.scale, scale);
+            //sprite.transform.position = Vector3.Scale(sprite.transform.position, scale); //not sure that you need this
+        }
+        #endregion
+
         #region MovePlayer
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
@@ -84,13 +110,10 @@ public class CharacterController : MonoBehaviour {
 
     private void UpdatePositionThresholds()
     {
-        float height = 2f * this.camera.orthographicSize;
-        float width = height * this.camera.aspect;
-
-        float upper = this.camera.transform.position.y + (height * positionTreshholds.VerticalTreshhold);
-        float lower = this.camera.transform.position.y - (height * positionTreshholds.VerticalTreshhold);
-        float left = this.camera.transform.position.x - (width * positionTreshholds.HorizontalTreshhold);
-        float right = this.camera.transform.position.x + (width * positionTreshholds.HorizontalTreshhold);
+        float upper = this.camera.transform.position.y + (cameraHeight * positionTreshholds.VerticalTreshhold);
+        float lower = this.camera.transform.position.y - (cameraHeight * positionTreshholds.VerticalTreshhold);
+        float left = this.camera.transform.position.x - (cameraWidth * positionTreshholds.HorizontalTreshhold);
+        float right = this.camera.transform.position.x + (cameraWidth * positionTreshholds.HorizontalTreshhold);
 
         positionTreshholds.UpdateTreshholds(upper, lower, left, right);
     }
