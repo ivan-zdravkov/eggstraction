@@ -28,7 +28,9 @@ public class CharacterController : MonoBehaviour {
         this.scale = new Vector3(Screen.width / defaultWidth, Screen.height / defaultHeight, 1f);
 
         this.positionTreshholds = new PositionTreshholds(25, 25);
-        this.levelGenerator = new LevelGenerator(0.7f, 100);
+
+        this.levelGenerator = new LevelGenerator(0.7f, 100, 3, 7);
+        this.levelGenerator.GenerateInnitialLevel(4);
 
         this.UpdatePositionThresholds();
     }
@@ -44,8 +46,6 @@ public class CharacterController : MonoBehaviour {
             this.scale = new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f);
 
             this.UpdatePositionThresholds();
-
-            this.levelGenerator.GenerateInnitialLevel(4);
 
             //TODO Resize all sprites!
             //sprite.transform.scale = Vector3.Scale(sprite.transform.scale, scale);

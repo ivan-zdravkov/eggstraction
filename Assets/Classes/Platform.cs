@@ -40,6 +40,11 @@ namespace Assets.Classes
             return new Platform(Platform.RandomGenerator.Next(0, jointsCount), Platform.RandomGenerator.Next(0, jointsCount));
         }
 
+        public static Platform GetFirstPlatform()
+        {
+            return new Platform(null, Platform.RandomGenerator.Next(0, jointsCount));
+        }
+
         public Platform GetNextPlatform()
         {
             return new Platform(this.rightJoint, Platform.RandomGenerator.Next(0, jointsCount));
