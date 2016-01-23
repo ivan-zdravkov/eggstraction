@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using System;
+using UnityEngine;
 using System.Collections;
 using Assets.Classes;
-using System;
 
 public class CharacterController : MonoBehaviour {
     private const float defaultWidth = 3840.0f;
@@ -19,89 +20,107 @@ public class CharacterController : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        this.camera = Camera.main;
-        this.sky = GameObject.Find("Sky");
+        try
+        {
+            this.camera = Camera.main;
+            this.sky = GameObject.Find("Sky");
 
-        this.cameraHeight = 2f * this.camera.orthographicSize;
-        this.cameraWidth = cameraHeight * this.camera.aspect;
+            this.cameraHeight = 2f * this.camera.orthographicSize;
+            this.cameraWidth = cameraHeight * this.camera.aspect;
 
-        this.scale = new Vector3(Screen.width / defaultWidth, Screen.height / defaultHeight, 1f);
+            this.scale = new Vector3(Screen.width / defaultWidth, Screen.height / defaultHeight, 1f);
 
-        this.positionTreshholds = new PositionTreshholds(25, 25);
+            this.positionTreshholds = new PositionTreshholds(25, 25);
 
-        this.levelGenerator = new LevelGenerator(0.7f, 100, 3, 7);
-        this.levelGenerator.GenerateInnitialLevel(4);
+            this.levelGenerator = new LevelGenerator(1000, 15, 4, 8, 4, 8);
+            this.levelGenerator.GenerateInnitialLevel(10);
 
-        this.UpdatePositionThresholds();
+            this.UpdatePositionThresholds();
+        }
+        catch (Exception ex)
+        {
+            string message = ex.Message;
+
+            throw ex;
+        }
     }
 
     // Update is called once per frame
     void Update () {
-        #region CheckResize
-        if (this.scale != new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f))
+        try
         {
-            this.cameraHeight = 2f * this.camera.orthographicSize;
-            this.cameraWidth = cameraHeight * this.camera.aspect;
-
-            this.scale = new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f);
-
-            this.UpdatePositionThresholds();
-
-            //TODO Resize all sprites!
-            //sprite.transform.scale = Vector3.Scale(sprite.transform.scale, scale);
-            //sprite.transform.position = Vector3.Scale(sprite.transform.position, scale); //not sure that you need this
-        }
-        #endregion
-
-        #region MovePlayer
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-        {
-            Vector3 moveUpVector = new Vector3(0, moveSpeed);
-
-            transform.Translate(moveUpVector);
-
-            if (transform.position.y > positionTreshholds.UpperTreshhold)
+            #region CheckResize
+            if (this.scale != new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f))
             {
-                this.MoveEnvironment(moveUpVector);
+                this.cameraHeight = 2f * this.camera.orthographicSize;
+                this.cameraWidth = cameraHeight * this.camera.aspect;
+
+                this.scale = new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f);
+
+                this.UpdatePositionThresholds();
+
+                //TODO Resize all sprites!
+                //sprite.transform.scale = Vector3.Scale(sprite.transform.scale, scale);
+                //sprite.transform.position = Vector3.Scale(sprite.transform.position, scale); //not sure that you need this
             }
-        }
+            #endregion
 
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-        {
-            Vector3 moveDownVector = new Vector3(0, -moveSpeed);
-
-            transform.Translate(moveDownVector);
-
-            if (transform.position.y < positionTreshholds.LowerTreshhold)
+            #region MovePlayer
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
             {
-                this.MoveEnvironment(moveDownVector);
+                Vector3 moveUpVector = new Vector3(0, moveSpeed);
+
+                transform.Translate(moveUpVector);
+
+                if (transform.position.y > positionTreshholds.UpperTreshhold)
+                {
+                    this.MoveEnvironment(moveUpVector);
+                }
             }
-        }
 
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
-        {
-            Vector3 moveRightVector = new Vector3(moveSpeed, 0);
-
-            transform.Translate(moveRightVector);
-
-            if (transform.position.x > positionTreshholds.RightTreshhold)
+            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
             {
-                this.MoveEnvironment(moveRightVector);
+                Vector3 moveDownVector = new Vector3(0, -moveSpeed);
+
+                transform.Translate(moveDownVector);
+
+                if (transform.position.y < positionTreshholds.LowerTreshhold)
+                {
+                    this.MoveEnvironment(moveDownVector);
+                }
             }
-        }
 
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
-        {
-            Vector3 moveLeftVector = new Vector3(-moveSpeed, 0);
-
-            transform.Translate(moveLeftVector);
-
-            if (transform.position.x < positionTreshholds.LeftTreshhold)
+            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
             {
-                this.MoveEnvironment(moveLeftVector);
+                Vector3 moveRightVector = new Vector3(moveSpeed, 0);
+
+                transform.Translate(moveRightVector);
+
+                if (transform.position.x > positionTreshholds.RightTreshhold)
+                {
+                    this.MoveEnvironment(moveRightVector);
+                }
             }
+
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+            {
+                Vector3 moveLeftVector = new Vector3(-moveSpeed, 0);
+
+                transform.Translate(moveLeftVector);
+
+                if (transform.position.x < positionTreshholds.LeftTreshhold)
+                {
+                    this.MoveEnvironment(moveLeftVector);
+                }
+            }
+            #endregion
         }
-        #endregion
+        catch (Exception ex)
+        {
+            string message = ex.Message;
+
+            throw ex;
+        }
     }
 
     private void MoveEnvironment(Vector3 moveVector)

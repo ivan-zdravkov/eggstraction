@@ -8,26 +8,41 @@ namespace Assets.Classes
     public class LevelGenerator
     {
         private int horizontalSize;
+        private int maxDeviationPercentage;
+
         private int minimumPlatformLength;
         private int maximumPlatformLength;
         private int averagePlarformLength;
-        private float blockEmptySpaceRatio;
+
+        private int minimumSpaceLength;
+        private int maximumSpaceLength;
+        private int averageSpaceLength;
 
         private Random randomGenerator;
         private Platform[][] level;
         
-        public LevelGenerator(float blockEmptySpaceRatio, int horizontalSize, int minimumPlatformLength, int maximumPlatformLength)
+        public LevelGenerator(int horizontalSize, int maxDeviationPercentage, int minimumPlatformLength, int maximumPlatformLength, int minimumSpaceLength, int maximumSpaceLength)
         {
             if ((minimumPlatformLength + maximumPlatformLength) % 2 != 0)
             {
                 throw new ArgumentException("The minimumPlatformLength and maximumPlatformLength must have an integer averagePlarformLength between them.");
             }
 
-            this.blockEmptySpaceRatio = blockEmptySpaceRatio;
+            if ((minimumSpaceLength + maximumSpaceLength) % 2 != 0)
+            {
+                throw new ArgumentException("The minimumSpaceLength and maximumSpaceLength must have an integer averageSpaceLength between them.");
+            }
+
             this.horizontalSize = horizontalSize;
+            this.maxDeviationPercentage = maxDeviationPercentage;
+
             this.minimumPlatformLength = minimumPlatformLength;
             this.maximumPlatformLength = maximumPlatformLength;
             this.averagePlarformLength = (minimumPlatformLength + maximumPlatformLength) / 2;
+
+            this.minimumSpaceLength = minimumSpaceLength;
+            this.maximumSpaceLength = maximumSpaceLength;
+            this.averageSpaceLength = (minimumSpaceLength + maximumSpaceLength) / 2;
 
             this.randomGenerator = new Random();
         }
@@ -102,19 +117,10 @@ namespace Assets.Classes
 
         private void PopulateNewRow(Platform[] row)
         {
-            int absoluteNumberOfPlatformsInLevel = (int)(this.horizontalSize * this.blockEmptySpaceRatio);
-            int absoluteNumberOfSpacesInLevel = this.horizontalSize - absoluteNumberOfPlatformsInLevel;
+            int totalDeviation = this.horizontalSize % (this.averagePlarformLength + this.averageSpaceLength);
 
-            // Generate no more than 10% of the total platform count as random deviation with a random sign;
-            int randomPlatformSpaceModifier = (int)(this.randomGenerator.Next(0, absoluteNumberOfPlatformsInLevel / 10) * Math.Pow((double)-1, (double)this.randomGenerator.Next(1, 3)));
-
-            absoluteNumberOfPlatformsInLevel += randomPlatformSpaceModifier;
-            absoluteNumberOfSpacesInLevel -= randomPlatformSpaceModifier;
-
-            int numberOfPlatformSpacePairs = absoluteNumberOfPlatformsInLevel / this.averagePlarformLength;
-
-            int platformDeiviation = absoluteNumberOfPlatformsInLevel % this.averagePlarformLength;
-            int spaceDeviation = -platformDeiviation;
+            int platformDeviation = -totalDeviation / 2;
+            int spaceDeviation = -(totalDeviation + platformDeviation);
 
             bool isPlatformMode = true;
             bool isFirstPlatform = true;
@@ -138,20 +144,137 @@ namespace Assets.Classes
                     }
                     else
                     {
+                        if (columnNumber == this.horizontalSize - 1 - this.minimumSpaceLength)
+                        {
+                            row[columnNumber] = row[columnNumber - 1].GetNextPlatform(null);
+
+                            isPlatformMode = false;
+
+                            continue;
+                        }
+
                         row[columnNumber] = row[columnNumber - 1].GetNextPlatform();
 
-                        //TODO: set isLastPlatform following the deviation
-                        //isLastPlatform = true;
+                        int numberOfConsecutivePlatforms = 2;
+
+                        while (columnNumber - numberOfConsecutivePlatforms > -1 && row[columnNumber - numberOfConsecutivePlatforms] != null)
+                        {
+                            numberOfConsecutivePlatforms++;
+                        }
+
+                        if (numberOfConsecutivePlatforms < this.minimumPlatformLength - 1)
+                        {
+                            continue;
+                        }
+
+                        if (numberOfConsecutivePlatforms == this.maximumPlatformLength - 1)
+                        {
+                            isLastPlatform = true;
+                            continue;
+                        }
+
+                        numberOfConsecutivePlatforms += 1; // Adding for the last platform we know for sure exists!
+
+                        bool addNextPlatform = false;
+
+                        int currentPlatformDeviation = platformDeviation + numberOfConsecutivePlatforms - this.averagePlarformLength;
+                        int percentageThreshhold = 50 + ((currentPlatformDeviation * 5 <= this.maxDeviationPercentage) ? (currentPlatformDeviation * 5) : this.maxDeviationPercentage);
+
+                        int randomPercentageNumber = this.randomGenerator.Next(0, 101);
+
+                        if (randomPercentageNumber > percentageThreshhold)
+                        {
+                            addNextPlatform = true;
+                        }
+
+                        if (addNextPlatform)
+                        {
+                            if (numberOfConsecutivePlatforms > this.averagePlarformLength)
+                            {
+                                platformDeviation--;
+                            }
+
+                            continue;
+                        }
+                        else
+                        {
+                            if (numberOfConsecutivePlatforms < this.averagePlarformLength)
+                            {
+                                platformDeviation++;
+
+                                isLastPlatform = true;
+                            }
+
+                            continue;
+                        }
                     }
                 }
                 else
                 {
                     row[columnNumber] = null;
 
-                    //TODO: set isPlatformMode following the deviation
-                    //isPlatformMode = true;
-                    //isFirstPlatform = true;
-                    //isLastPlatform = false;
+                    int numberOfConsecutiveSpaces = 1;
+
+                    while (row[columnNumber - numberOfConsecutiveSpaces] == null)
+                    {
+                        numberOfConsecutiveSpaces++;
+                    }
+
+                    if (numberOfConsecutiveSpaces < this.minimumSpaceLength)
+                    {
+                        continue;
+                    }
+
+                    int maxRemainingSpacesToAdd = this.maximumSpaceLength - numberOfConsecutiveSpaces;
+
+                    if (columnNumber + maxRemainingSpacesToAdd >= this.horizontalSize - 1)
+                    {
+                        continue; // Keep adding spaces until the end.
+                    }
+
+                    if (numberOfConsecutiveSpaces == this.maximumSpaceLength)
+                    {
+                        isPlatformMode = true;
+                        isFirstPlatform = true;
+                        isLastPlatform = false;
+
+                        continue;
+                    }
+
+                    bool addNextSpace = false;
+
+                    int currentSpaceDeviation = spaceDeviation + numberOfConsecutiveSpaces - this.averagePlarformLength;
+                    int percentageThreshhold = 50 + ((currentSpaceDeviation * 5 <= this.maxDeviationPercentage) ? (currentSpaceDeviation * 5) : this.maxDeviationPercentage);
+
+                    int randomPercentageNumber = this.randomGenerator.Next(0, 101);
+
+                    if (randomPercentageNumber > percentageThreshhold)
+                    {
+                        addNextSpace = true;
+                    }
+
+                    if (addNextSpace)
+                    {
+                        if (numberOfConsecutiveSpaces > this.averageSpaceLength)
+                        {
+                            spaceDeviation++;
+                        }
+
+                        continue;
+                    }
+                    else
+                    {
+                        if (numberOfConsecutiveSpaces < this.averageSpaceLength)
+                        {
+                            spaceDeviation--;
+
+                            isPlatformMode = true;
+                            isFirstPlatform = true;
+                            isLastPlatform = false;
+                        }
+
+                        continue;
+                    }
                 }
             }
         }
