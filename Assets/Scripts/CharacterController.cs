@@ -3,12 +3,14 @@ using System;
 using UnityEngine;
 using System.Collections;
 using Assets.Classes;
+using System.Collections.Generic;
 
 public class CharacterController : MonoBehaviour {
+    private const string spritePath = "Sprites/Terrain/";
     private const float defaultWidth = 3840.0f;
     private const float defaultHeight = 2160.0f;
     private const float moveSpeed = 0.05f;
-
+    
     private float cameraWidth;
     private float cameraHeight;
 
@@ -17,6 +19,8 @@ public class CharacterController : MonoBehaviour {
     private GameObject sky;
     private PositionTreshholds positionTreshholds;
     private LevelGenerator levelGenerator;
+
+    private List<GameObject> instantiatedGameObjects;
 
     // Use this for initialization
     void Start () {
@@ -34,6 +38,8 @@ public class CharacterController : MonoBehaviour {
 
             this.levelGenerator = new LevelGenerator(100, 4, 8, 4, 8);
             this.levelGenerator.GenerateInnitialLevel(10);
+
+            this.InstantiateLevel();
 
             this.UpdatePositionThresholds();
         }
@@ -139,5 +145,36 @@ public class CharacterController : MonoBehaviour {
         float right = this.camera.transform.position.x + (cameraWidth * positionTreshholds.HorizontalTreshhold);
 
         positionTreshholds.UpdateTreshholds(upper, lower, left, right);
+    }
+
+    private void InstantiateLevel()
+    {
+        this.instantiatedGameObjects = new List<GameObject>();
+
+        for (int rowNumber = 0; rowNumber < this.levelGenerator.Level.Length; rowNumber++)
+        {
+            Platform[] row = this.levelGenerator.Level[rowNumber];
+
+            for (var columnNumber = 0; columnNumber < row.Length; columnNumber++)
+            {
+                Platform platform = row[columnNumber];
+
+                if (platform != null)
+                {
+                    string leftJoint = platform.LeftJoint.HasValue ? platform.LeftJoint.Value.ToString() : "Start";
+                    string rightJoint = platform.RightJoint.HasValue ? platform.RightJoint.Value.ToString() : "End";
+                    string spriteName = leftJoint + "-" + rightJoint;
+
+                    GameObject platformToSpawn = new GameObject();
+
+                    platformToSpawn.AddComponent<SpriteRenderer>();
+                    platformToSpawn.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(spritePath + spriteName);
+
+                    GameObject instantiatedGameObject = Instantiate(platformToSpawn, transform.position, transform.rotation) as GameObject;
+
+                    this.instantiatedGameObjects.Add(instantiatedGameObject);
+                }
+            }
+        }
     }
 }
