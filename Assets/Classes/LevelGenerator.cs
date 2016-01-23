@@ -8,7 +8,6 @@ namespace Assets.Classes
     public class LevelGenerator
     {
         private int horizontalSize;
-        private int maxDeviationPercentage;
 
         private int minimumPlatformLength;
         private int maximumPlatformLength;
@@ -21,20 +20,9 @@ namespace Assets.Classes
         private Random randomGenerator;
         private Platform[][] level;
         
-        public LevelGenerator(int horizontalSize, int maxDeviationPercentage, int minimumPlatformLength, int maximumPlatformLength, int minimumSpaceLength, int maximumSpaceLength)
+        public LevelGenerator(int horizontalSize, int minimumPlatformLength, int maximumPlatformLength, int minimumSpaceLength, int maximumSpaceLength)
         {
-            if ((minimumPlatformLength + maximumPlatformLength) % 2 != 0)
-            {
-                throw new ArgumentException("The minimumPlatformLength and maximumPlatformLength must have an integer averagePlarformLength between them.");
-            }
-
-            if ((minimumSpaceLength + maximumSpaceLength) % 2 != 0)
-            {
-                throw new ArgumentException("The minimumSpaceLength and maximumSpaceLength must have an integer averageSpaceLength between them.");
-            }
-
             this.horizontalSize = horizontalSize;
-            this.maxDeviationPercentage = maxDeviationPercentage;
 
             this.minimumPlatformLength = minimumPlatformLength;
             this.maximumPlatformLength = maximumPlatformLength;
@@ -61,7 +49,7 @@ namespace Assets.Classes
 
             for (int rowNumber = 0; rowNumber < numberOfRowsToCreate; rowNumber++)
             {
-                Platform[] row = new Platform[this.horizontalSize];
+                Platform[] row = new Platform[this.horizontalSize * (this.averagePlarformLength + this.averageSpaceLength)];
 
                 if (rowNumber == 0)
                 {
@@ -83,7 +71,7 @@ namespace Assets.Classes
                 }
                 else
                 {
-                    this.PopulateNewRow(row);
+                    row = this.GenerateNewRow();
                 }
 
                 this.level[rowNumber] = row;
@@ -104,9 +92,7 @@ namespace Assets.Classes
                 }
                 else
                 {
-                    Platform[] row = new Platform[this.horizontalSize];
-
-                    this.PopulateNewRow(row);
+                    Platform[] row = this.GenerateNewRow();
 
                     newLevel[rowNumber] = row;
                 }
@@ -115,168 +101,56 @@ namespace Assets.Classes
             this.level = newLevel;
         }
 
-        private void PopulateNewRow(Platform[] row)
+        private Platform[] GenerateNewRow()
         {
-            int totalDeviation = this.horizontalSize % (this.averagePlarformLength + this.averageSpaceLength);
+            List<Platform> row = new List<Platform>();
 
-            int platformDeviation = -totalDeviation / 2;
-            int spaceDeviation = -(totalDeviation + platformDeviation);
-
-            bool isPlatformMode = true;
-            bool isFirstPlatform = true;
-            bool isLastPlatform = false;
-
-            for (int columnNumber = 0; columnNumber < this.horizontalSize; columnNumber++)
+            for (int platformNumber = 0; platformNumber < this.horizontalSize; platformNumber++)
             {
-                if (isPlatformMode)
+                #region GeneratePlatforms
+                row.Add(Platform.GetFirstPlatform());
+
+                for (int i = 1; i < this.minimumPlatformLength; i++)
                 {
-                    if (isFirstPlatform)
+                    row.Add(row.Last().GetNextPlatform());
+                }
+
+                for (int i = this.minimumPlatformLength + 1; i < this.maximumPlatformLength; i++)
+                {
+                    if (this.randomGenerator.Next(1, 101) <= 50)
                     {
-                        row[columnNumber] = Platform.GetFirstPlatform();
-
-                        isFirstPlatform = false;
-                    }
-                    else if (isLastPlatform)
-                    {
-                        row[columnNumber] = row[columnNumber - 1].GetNextPlatform(null);
-
-                        isPlatformMode = false;
-                    }
-                    else
-                    {
-                        if (columnNumber == this.horizontalSize - 1 - this.minimumSpaceLength)
-                        {
-                            row[columnNumber] = row[columnNumber - 1].GetNextPlatform(null);
-
-                            isPlatformMode = false;
-
-                            continue;
-                        }
-
-                        row[columnNumber] = row[columnNumber - 1].GetNextPlatform();
-
-                        int numberOfConsecutivePlatforms = 2;
-
-                        while (columnNumber - numberOfConsecutivePlatforms > -1 && row[columnNumber - numberOfConsecutivePlatforms] != null)
-                        {
-                            numberOfConsecutivePlatforms++;
-                        }
-
-                        if (numberOfConsecutivePlatforms < this.minimumPlatformLength - 1)
-                        {
-                            continue;
-                        }
-
-                        if (numberOfConsecutivePlatforms == this.maximumPlatformLength - 1)
-                        {
-                            isLastPlatform = true;
-                            continue;
-                        }
-
-                        numberOfConsecutivePlatforms += 1; // Adding for the last platform we know for sure exists!
-
-                        bool addNextPlatform = false;
-
-                        int currentPlatformDeviation = platformDeviation + numberOfConsecutivePlatforms - this.averagePlarformLength;
-                        int percentageThreshhold = 50 + ((currentPlatformDeviation * 5 <= this.maxDeviationPercentage) ? (currentPlatformDeviation * 5) : this.maxDeviationPercentage);
-
-                        int randomPercentageNumber = this.randomGenerator.Next(0, 101);
-
-                        if (randomPercentageNumber > percentageThreshhold)
-                        {
-                            addNextPlatform = true;
-                        }
-
-                        if (addNextPlatform)
-                        {
-                            if (numberOfConsecutivePlatforms > this.averagePlarformLength)
-                            {
-                                platformDeviation--;
-                            }
-
-                            continue;
-                        }
-                        else
-                        {
-                            if (numberOfConsecutivePlatforms < this.averagePlarformLength)
-                            {
-                                platformDeviation++;
-
-                                isLastPlatform = true;
-                            }
-
-                            continue;
-                        }
+                        row.Add(row.Last().GetNextPlatform());
                     }
                 }
-                else
+
+                row.Add(row.Last().GetNextPlatform(null));
+                #endregion
+
+                #region GenerateSpaces
+                for (int i = 0; i < this.minimumSpaceLength; i++)
                 {
-                    row[columnNumber] = null;
+                    row.Add(null);
+                }
 
-                    int numberOfConsecutiveSpaces = 1;
-
-                    while (row[columnNumber - numberOfConsecutiveSpaces] == null)
+                for (int i = this.minimumSpaceLength; i < this.maximumPlatformLength; i++)
+                {
+                    if (this.randomGenerator.Next(1, 101) <= 50)
                     {
-                        numberOfConsecutiveSpaces++;
-                    }
-
-                    if (numberOfConsecutiveSpaces < this.minimumSpaceLength)
-                    {
-                        continue;
-                    }
-
-                    int maxRemainingSpacesToAdd = this.maximumSpaceLength - numberOfConsecutiveSpaces;
-
-                    if (columnNumber + maxRemainingSpacesToAdd >= this.horizontalSize - 1)
-                    {
-                        continue; // Keep adding spaces until the end.
-                    }
-
-                    if (numberOfConsecutiveSpaces == this.maximumSpaceLength)
-                    {
-                        isPlatformMode = true;
-                        isFirstPlatform = true;
-                        isLastPlatform = false;
-
-                        continue;
-                    }
-
-                    bool addNextSpace = false;
-
-                    int currentSpaceDeviation = spaceDeviation + numberOfConsecutiveSpaces - this.averagePlarformLength;
-                    int percentageThreshhold = 50 + ((currentSpaceDeviation * 5 <= this.maxDeviationPercentage) ? (currentSpaceDeviation * 5) : this.maxDeviationPercentage);
-
-                    int randomPercentageNumber = this.randomGenerator.Next(0, 101);
-
-                    if (randomPercentageNumber > percentageThreshhold)
-                    {
-                        addNextSpace = true;
-                    }
-
-                    if (addNextSpace)
-                    {
-                        if (numberOfConsecutiveSpaces > this.averageSpaceLength)
-                        {
-                            spaceDeviation++;
-                        }
-
-                        continue;
-                    }
-                    else
-                    {
-                        if (numberOfConsecutiveSpaces < this.averageSpaceLength)
-                        {
-                            spaceDeviation--;
-
-                            isPlatformMode = true;
-                            isFirstPlatform = true;
-                            isLastPlatform = false;
-                        }
-
-                        continue;
+                        row.Add(null);
                     }
                 }
+                #endregion
             }
+
+            //Shift the row a few blocks to the left so there wouldn't be a visible line of blocks
+
+            int numberOfBlocksToShiftToTheLeft = this.randomGenerator.Next(0, this.maximumPlatformLength + this.maximumSpaceLength + 1);
+
+            List<Platform> splinterCell = row.Take(numberOfBlocksToShiftToTheLeft).ToList();
+
+            row.AddRange(splinterCell);
+
+            return row.Skip(numberOfBlocksToShiftToTheLeft).ToArray();
         }
     }
 }

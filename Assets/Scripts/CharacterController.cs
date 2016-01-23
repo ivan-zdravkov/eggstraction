@@ -32,7 +32,7 @@ public class CharacterController : MonoBehaviour {
 
             this.positionTreshholds = new PositionTreshholds(25, 25);
 
-            this.levelGenerator = new LevelGenerator(1000, 15, 4, 8, 4, 8);
+            this.levelGenerator = new LevelGenerator(100, 4, 8, 4, 8);
             this.levelGenerator.GenerateInnitialLevel(10);
 
             this.UpdatePositionThresholds();
