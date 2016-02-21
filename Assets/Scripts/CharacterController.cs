@@ -17,6 +17,7 @@ public class CharacterController : MonoBehaviour {
     private Vector3 scale;
     private Camera camera;
     private GameObject sky;
+    private GameObject level;
     private PositionTreshholds positionTreshholds;
     private LevelGenerator levelGenerator;
 
@@ -28,6 +29,7 @@ public class CharacterController : MonoBehaviour {
         {
             this.camera = Camera.main;
             this.sky = GameObject.Find("Sky");
+            this.level = GameObject.Find("Level");
 
             this.cameraHeight = 2f * this.camera.orthographicSize;
             this.cameraWidth = cameraHeight * this.camera.aspect;
@@ -167,12 +169,16 @@ public class CharacterController : MonoBehaviour {
 
                     GameObject platformToSpawn = new GameObject();
 
+                    platformToSpawn.name = String.Format("Platform[{0}][{1}]", rowNumber, columnNumber);
+                    platformToSpawn.transform.parent = this.level.transform;
+                    platformToSpawn.transform.position = new Vector3(columnNumber, rowNumber * 3, -5);
+
                     platformToSpawn.AddComponent<SpriteRenderer>();
                     platformToSpawn.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(spritePath + spriteName);
 
-                    GameObject instantiatedGameObject = Instantiate(platformToSpawn, transform.position, transform.rotation) as GameObject;
+                    //GameObject instantiatedGameObject = Instantiate(platformToSpawn, transform.position, transform.rotation) as GameObject;
 
-                    this.instantiatedGameObjects.Add(instantiatedGameObject);
+                    this.instantiatedGameObjects.Add(platformToSpawn);
                 }
             }
         }
