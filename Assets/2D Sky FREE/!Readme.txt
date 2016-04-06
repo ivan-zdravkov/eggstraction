@@ -1,42 +1,94 @@
 ------------------------------------------------------------------
-2D Sky v.1.0
+2D Sky FREE 1.0.5
 ------------------------------------------------------------------
 
-	This package contains sprites and scripts to help you quickly add 2D parallax sky into your scene.
+	2D Sky FREE has low-resolution sprites and demo scene found in 2D Sky.
 
-	Features
-		â€¢ Sunny sky sprites.
-		â€¢ Scripts to control cloud flow.
-		â€¢ Use Unity 2D features, doesn't other 2d frameworks.
-		â€¢ Supports all player platforms.
-		â€¢ Unity and Unity Pro compatible.
+	Features:
 
-	Web Player Demo:
-		http://ge-team.com/pages/unity-3d/2d-sky/
+		• Low-res hand-painted sunny sky sprites.
+		• Components to control cloud.
+		• Use Unity 2D Sprite features, no required for thirdparty 2d frameworks.
+		• Realtime self strength background and self auto-tile large cloud for any screen resolution.
 
-	Thank you for your support and enjoy your creations,
+		• Support all build player platforms.
+		
+	Compatible:
+
+		• Unity 4.6.9 or higher.
+		• Unity 5.3.2 or higher.
+
+	Note:
+
+		• This package does not contain hi-quality textures and scripts.
+		• If you are interested or need them, please visit 2D Sky full version on Unity Asset Store at https://www.assetstore.unity3d.com/en/#!/content/21555
+
+	Please direct any bugs/comments/suggestions to support e-mail (geteamdev@gmail.com).
+
+	Thank you for your support,
 
 	Gold Experience Team
-	Products: www.ge-team.com/pages
-	Support: geteamdev@gmail.com
-
-
+	E-mail: geteamdev@gmail.com
+	Website: http://www.ge-team.com
 
 ------------------------------------------------------------------
-Using Demo Scene
+Use demo scene
 ------------------------------------------------------------------
 
-	1. Open Demo in "2D Sky/scenes/Demo"
-	2. In Hierarchy tab, there are objects name NearClound, MidCloud, FarCloud.
-	3. Click on any of them you will see Cloud Flow component in Inspector tab.
-		3.1 Enable Large Cloud loop
-				Check if this game object has large cloud sprites under its hierarchy.
-		3.2 Behavior
-				- Switch Left Right, this forces clouds to move left/right.
-				- Flow The Same Way, random left/right then force cloud move together.
-		3.3 Min/Max Speed, Amount to random the clouds speed.
-		3.4 Camera, an orthographic camera that will render the clonds.
-	5. Click on object names Sunny_01_sky.
-	6. Look for Sky BG component in Inspector tab, this component does strength Sunny_01_sky sprite to fit the screen.
-	7. There is a parameter names Camera, you have to drag an orthographic camera in Hierarchy to this parameter. 
-	8. You may try adjust parameters then copy and paste it into your own scene.
+	1. Open Demo in "2D Sky FREE/Demo/Scenes/2D Sky FREE Demo (960x600px)".
+	2. In Hierarchy tab, look for NearCloud, MidCloud, FarCloud objects.
+	3. Select any of them, you will see GE2DSkyFREE_CloudFlow component in Inspector tab. GE2DSkyFREE_CloudFlow component does update position of children objects.
+
+			Parameters:
+
+				Camera:			An orthographic camera that renders clouds and background
+				Tile:				Enable tile for large cloud
+				Behavior:	
+					- Flow Mixed Left Right	:	Randomly left/right direction for children
+					- Flow to Left:				Children objects move to left, they will repeat from right edge when they get off from screen.
+					- Flow to Right:			Children objects move to right, they will repeat from left edge when they get off from screen.
+				Min Speed:		Minimum speed of children
+				Max Speed:		Maximum speed of children
+				Speed Multiplier:	Current speed multiplier
+
+	4. Select an object names Sunny_01_sky.
+	5. Look for GE2DSkyFREE_SkyBG component in Inspector tab, this component does resize Sunny_01_sky sprite to strength  fit on screen.
+
+			Parameters:
+
+				Camera:			An orthographic camera that renders clouds and background
+
+------------------------------------------------------------------
+Use cloud on your scene
+------------------------------------------------------------------
+	
+	1. Open Demo in "2D Sky FREE/Demo/Scenes/2D Sky FREE Demo (960x600px)".
+	2. Look for Sky object, copy it.
+	3. Open your scene then paste it into your scene.
+	4. Press play, you shoud see Sky and its children active same as in the 2D Sky FREE Demo (960x600px) scene.
+
+------------------------------------------------------------------
+Release notes
+------------------------------------------------------------------
+
+	Version 1.0.5
+
+		• Add real-time strength capability for background when screen resolution is changed.
+		• Add real-time tile capability for large cloud when screen resolution is changed.
+		• Add cloud Speed multiplier.
+		• Add Full Screen toggle button.
+		• Add Settings button and details panels.
+		• Fixed GUID conflict with other packages.
+		• Rearrange folders.
+		• Update Demo scene.
+		• Use component in dll instead of scripts.
+		• Unity 4.6.9 and higher compatible.
+		• Unity 5.3.2 and higher compatible.
+
+	version 1.0 (Initial version, released on Sep 15, 2014)
+
+		• Sunny sky sprites.
+		• Scripts to control cloud.
+		• Use Unity 2D features, doesn't other 2d frameworks.
+		• Supports all player platforms.
+		• Unity and Unity Pro compatible.
