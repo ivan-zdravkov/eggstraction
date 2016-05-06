@@ -4,6 +4,7 @@ using System.Collections;
 using Assets.Classes;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.UI;
 
 public class CharacterController : MonoBehaviour {
     private const string terrainPath = "Sprites/Terrain/";
@@ -20,10 +21,13 @@ public class CharacterController : MonoBehaviour {
     private int leftGameBorderPositionX;
     private int rightGameBorderPositionX;
 
+    private int score = 0;
+
     private Vector3 scale;
     private Camera camera;
     private GameObject sky;
     private GameObject level;
+    private GameObject scoreText;
     private PositionTreshholds positionTreshholds;
     private LevelGenerator levelGenerator;
 
@@ -40,6 +44,7 @@ public class CharacterController : MonoBehaviour {
             this.camera = Camera.main;
             this.sky = GameObject.Find("Sky");
             this.level = GameObject.Find("Level");
+            this.scoreText = GameObject.Find("Score Text");
 
             this.cameraHeight = 2f * this.camera.orthographicSize;
             this.cameraWidth = cameraHeight * this.camera.aspect;
@@ -70,6 +75,20 @@ public class CharacterController : MonoBehaviour {
     void Update () {
         try
         {
+            #region Score
+            int intHeight = (int)(this.transform.position.y / 3.0f) + 1;
+            score = score >= intHeight ? score : intHeight;
+
+            if (this.transform.position.y < 0.0f)
+            {
+                this.scoreText.GetComponent<Text>().text = "Score: 0";
+            }
+            else
+            {
+                this.scoreText.GetComponent<Text>().text = "Score: " + score;
+            }
+            #endregion
+
             if (lastFrameCharacterHeight == this.transform.position.y)
             {
                 this.isGrounded = true;
@@ -102,20 +121,6 @@ public class CharacterController : MonoBehaviour {
                 {
                     this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);  
                      
-                    float theYPositionOfTheTopMostElement = this.instantiatedGameObjects.Max(x => x.transform.position.y);
-
-                    //Pregenerate Elements, half a camera before needed.
-                    if (this.camera.transform.position.y + this.cameraHeight > theYPositionOfTheTopMostElement)
-                    {
-                        this.levelGenerator.GenerateNewRows(1);
-                        this.InstantiateLevel(this.levelGenerator.Level.Count() - 1);
-                    }
-
-                    if (transform.position.y > positionTreshholds.UpperTreshhold)
-                    {
-                        this.MoveEnvironment(Vector3.up * jumpHeight);
-                    }
-
                     this.isGrounded = false;
                 }
             }
@@ -156,6 +161,30 @@ public class CharacterController : MonoBehaviour {
                 }
             }
             #endregion
+
+            if (transform.position.y > positionTreshholds.UpperTreshhold)
+            {
+                this.MoveEnvironment(Vector3.up * 0.2f);
+            }
+
+            float theYPositionOfTheTopMostElement = this.instantiatedGameObjects.Max(x => x.transform.position.y);
+
+            //Pregenerate Elements, half a camera before needed.
+            if (this.camera.transform.position.y + this.cameraHeight > theYPositionOfTheTopMostElement)
+            {
+                this.levelGenerator.GenerateNewRows(10);
+                this.InstantiateLevel(this.levelGenerator.Level.Count() - 10);
+            }
+
+            //Quit the game if the bottom catchesup to the character
+            float cameraBottom = this.camera.transform.position.y - (this.cameraHeight / 2);
+            if (cameraBottom > transform.position.y)
+            {
+                Application.Quit();
+            }
+
+            //Move the environment upwards, gradually increasing the speed as the game continues
+            this.MoveEnvironment(Vector3.up * (this.levelGenerator.Level.Count() / 25.0f * Time.deltaTime));
         }
         catch (Exception ex)
         {
