@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using Assets.Classes;
 using System.Collections.Generic;
+using System.Linq;
 
 public class CharacterController : MonoBehaviour {
     private const string spritePath = "Sprites/Terrain/";
@@ -40,13 +41,13 @@ public class CharacterController : MonoBehaviour {
 
             this.positionTreshholds = new PositionTreshholds(25, 25);
 
-            this.levelGenerator = new LevelGenerator(8, 4, 8, 4, 8);
+            this.levelGenerator = new LevelGenerator(10, 4, 8, 4, 8);
             this.levelGenerator.GenerateInnitialLevel(10);
 
             this.rightGameBorderPositionX = this.levelGenerator.MaximumRowLength / 2;
             this.leftGameBorderPositionX = -rightGameBorderPositionX;
 
-            this.InstantiateLevel();
+            this.InstantiateLevel(0);
 
             this.UpdatePositionThresholds();
         }
@@ -84,6 +85,15 @@ public class CharacterController : MonoBehaviour {
                 Vector3 moveUpVector = new Vector3(0, moveSpeed);
 
                 transform.Translate(moveUpVector);
+
+                float theYPositionOfTheTopMostElement = this.instantiatedGameObjects.Max(x => x.transform.position.y);
+
+                //Pregenerate Elements, half a camera before needed.
+                if (this.camera.transform.position.y + this.cameraHeight > theYPositionOfTheTopMostElement)
+                {
+                    this.levelGenerator.GenerateNewRows(1);
+                    this.InstantiateLevel(this.levelGenerator.Level.Count() - 1);
+                }
 
                 if (transform.position.y > positionTreshholds.UpperTreshhold)
                 {
@@ -168,11 +178,11 @@ public class CharacterController : MonoBehaviour {
         positionTreshholds.UpdateTreshholds(upper, lower, left, right);
     }
 
-    private void InstantiateLevel()
+    private void InstantiateLevel(int rowNumberToInstantiateFrom)
     {
         this.instantiatedGameObjects = new List<GameObject>();
 
-        for (int rowNumber = 0; rowNumber < this.levelGenerator.Level.Length; rowNumber++)
+        for (int rowNumber = rowNumberToInstantiateFrom; rowNumber < this.levelGenerator.Level.Length; rowNumber++)
         {
             Platform[] row = this.levelGenerator.Level[rowNumber];
 
