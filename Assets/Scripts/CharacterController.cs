@@ -1,5 +1,4 @@
 ﻿using System;
-using System;
 using UnityEngine;
 using System.Collections;
 using Assets.Classes;
@@ -41,7 +40,7 @@ public class CharacterController : MonoBehaviour {
 
             this.positionTreshholds = new PositionTreshholds(25, 25);
 
-            this.levelGenerator = new LevelGenerator(6, 4, 8, 4, 8);
+            this.levelGenerator = new LevelGenerator(8, 4, 8, 4, 8);
             this.levelGenerator.GenerateInnitialLevel(10);
 
             this.rightGameBorderPositionX = this.levelGenerator.MaximumRowLength / 2;
@@ -112,7 +111,9 @@ public class CharacterController : MonoBehaviour {
 
                     transform.Translate(moveRightVector);
 
-                    bool areWeNearTheRightEndOfTheScreen = positionTreshholds.RightTreshhold >= (this.cameraWidth - 1.5f) * (1.0f - positionTreshholds.HorizontalTreshhold);
+                    float cameraRight = this.camera.transform.position.x + (this.cameraWidth / 2);
+
+                    bool areWeNearTheRightEndOfTheScreen = cameraRight >= this.rightGameBorderPositionX;
 
                     if (transform.position.x > positionTreshholds.RightTreshhold && !areWeNearTheRightEndOfTheScreen)
                     {
@@ -129,7 +130,9 @@ public class CharacterController : MonoBehaviour {
 
                     transform.Translate(moveLeftVector);
 
-                    bool areWeNearTheLeftEndOfTheScreen = positionTreshholds.LeftTreshhold <= -((this.cameraWidth - 1.5f) * (1.0f - positionTreshholds.HorizontalTreshhold));
+                    float cameraLeft = this.camera.transform.position.x - (this.cameraWidth / 2);
+
+                    bool areWeNearTheLeftEndOfTheScreen = cameraLeft <= this.leftGameBorderPositionX;
 
                     if (transform.position.x < positionTreshholds.LeftTreshhold && !areWeNearTheLeftEndOfTheScreen)
                     {
