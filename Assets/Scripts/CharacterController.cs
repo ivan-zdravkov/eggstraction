@@ -21,6 +21,7 @@ public class CharacterController : MonoBehaviour {
     private int leftGameBorderPositionX;
     private int rightGameBorderPositionX;
 
+    private float cameraMoveUpSpeedModifier = 50.0f;
     private int score = 0;
 
     private Vector3 scale;
@@ -45,6 +46,8 @@ public class CharacterController : MonoBehaviour {
             this.sky = GameObject.Find("Sky");
             this.level = GameObject.Find("Level");
             this.scoreText = GameObject.Find("Score Text");
+
+            this.scoreText.transform.position = new Vector3(this.camera.transform.position.x - (this.cameraHeight / 2) + 125, this.camera.transform.position.y - (this.cameraWidth / 2) + 50, 0);
 
             this.cameraHeight = 2f * this.camera.orthographicSize;
             this.cameraWidth = cameraHeight * this.camera.aspect;
@@ -180,11 +183,11 @@ public class CharacterController : MonoBehaviour {
             float cameraBottom = this.camera.transform.position.y - (this.cameraHeight / 2);
             if (cameraBottom > transform.position.y)
             {
-                Application.Quit();
+                //Application.Quit();
             }
 
             //Move the environment upwards, gradually increasing the speed as the game continues
-            this.MoveEnvironment(Vector3.up * (this.levelGenerator.Level.Count() / 25.0f * Time.deltaTime));
+            this.MoveEnvironment(Vector3.up * (this.levelGenerator.Level.Count() / this.cameraMoveUpSpeedModifier * Time.deltaTime));
         }
         catch (Exception ex)
         {
