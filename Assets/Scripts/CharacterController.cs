@@ -13,7 +13,7 @@ public class CharacterController : MonoBehaviour {
     private const float defaultWidth = 3840.0f;
     private const float defaultHeight = 2160.0f;
     private const float moveSpeed = 5.0f; // More speed than 5.0 causes the character pass through solid walls. Unity Bug
-    private const float jumpHeight = 500.0f;
+    private const float jumpHeight = 600.0f;
     
     private float cameraWidth;
     private float cameraHeight;
@@ -92,12 +92,14 @@ public class CharacterController : MonoBehaviour {
             }
             #endregion
 
-            if (lastFrameCharacterHeight == this.transform.position.y)
+            if (lastFrameCharacterHeight == this.transform.position.y) // If character is staying horizontally, allow him to jump.
             {
                 this.isGrounded = true;
             }
             else
             {
+                this.GetComponent<Rigidbody>().velocity += new Vector3(0, -0.1f, 0);
+
                 lastFrameCharacterHeight = this.transform.position.y;
             }
 
@@ -110,10 +112,6 @@ public class CharacterController : MonoBehaviour {
                 this.scale = new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f);
 
                 this.UpdatePositionThresholds();
-
-                //TODO Resize all sprites!
-                //sprite.transform.scale = Vector3.Scale(sprite.transform.scale, scale);
-                //sprite.transform.position = Vector3.Scale(sprite.transform.position, scale); //not sure that you need this
             }
             #endregion
 
@@ -167,7 +165,7 @@ public class CharacterController : MonoBehaviour {
 
             if (transform.position.y > positionTreshholds.UpperTreshhold)
             {
-                this.MoveEnvironment(Vector3.up * 0.2f);
+                this.MoveEnvironment(Vector3.up * Time.deltaTime * 2); 
             }
 
             float theYPositionOfTheTopMostElement = this.instantiatedGameObjects.Max(x => x.transform.position.y);
@@ -183,7 +181,7 @@ public class CharacterController : MonoBehaviour {
             float cameraBottom = this.camera.transform.position.y - (this.cameraHeight / 2);
             if (cameraBottom > transform.position.y)
             {
-                //Application.Quit();
+                Application.Quit();
             }
 
             //Move the environment upwards, gradually increasing the speed as the game continues
@@ -196,11 +194,6 @@ public class CharacterController : MonoBehaviour {
             throw ex;
         }
     }
-
-    //void OnCollisionEnter(Collision other)
-    //{
-    //    this.isGrounded = true;
-    //}
 
     private void MoveEnvironment(Vector3 moveVector)
     {
