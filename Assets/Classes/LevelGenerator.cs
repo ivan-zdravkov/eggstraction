@@ -35,6 +35,14 @@ namespace Assets.Classes
             this.randomGenerator = new Random();
         }
 
+        public int MaximumRowLength
+        {
+            get
+            {
+                return horizontalSize * (averagePlarformLength + averageSpaceLength - 1);
+            }
+        }
+
         public Platform[][] Level
         {
             get
@@ -53,7 +61,7 @@ namespace Assets.Classes
 
                 if (rowNumber == 0)
                 {
-                    for (int columnNumber = 0; columnNumber < this.horizontalSize; columnNumber++)
+                    for (int columnNumber = 0; columnNumber < this.MaximumRowLength; columnNumber++)
                     {
                         if (columnNumber == 0)
                         {
@@ -144,7 +152,8 @@ namespace Assets.Classes
 
             //Shift the row a few blocks to the left so there wouldn't be a visible line of blocks
 
-            int numberOfBlocksToShiftToTheLeft = this.randomGenerator.Next(0, this.maximumPlatformLength + this.maximumSpaceLength + 1);
+            int centerOfTheView = this.horizontalSize / 2;
+            int numberOfBlocksToShiftToTheLeft = this.randomGenerator.Next(centerOfTheView, centerOfTheView + this.maximumPlatformLength + this.maximumSpaceLength + 1);
 
             List<Platform> splinterCell = row.Take(numberOfBlocksToShiftToTheLeft).ToList();
 

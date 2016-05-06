@@ -14,6 +14,9 @@ public class CharacterController : MonoBehaviour {
     private float cameraWidth;
     private float cameraHeight;
 
+    private int leftGameBorderPositionX;
+    private int rightGameBorderPositionX;
+
     private Vector3 scale;
     private Camera camera;
     private GameObject sky;
@@ -38,8 +41,11 @@ public class CharacterController : MonoBehaviour {
 
             this.positionTreshholds = new PositionTreshholds(25, 25);
 
-            this.levelGenerator = new LevelGenerator(100, 4, 8, 4, 8);
+            this.levelGenerator = new LevelGenerator(6, 4, 8, 4, 8);
             this.levelGenerator.GenerateInnitialLevel(10);
+
+            this.rightGameBorderPositionX = this.levelGenerator.MaximumRowLength / 2;
+            this.leftGameBorderPositionX = -rightGameBorderPositionX;
 
             this.InstantiateLevel();
 
@@ -100,25 +106,35 @@ public class CharacterController : MonoBehaviour {
 
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
             {
-                Vector3 moveRightVector = new Vector3(moveSpeed, 0);
-
-                transform.Translate(moveRightVector);
-
-                if (transform.position.x > positionTreshholds.RightTreshhold)
+                if (transform.position.x < this.rightGameBorderPositionX) // Stop moving if we are the end of the screen
                 {
-                    this.MoveEnvironment(moveRightVector);
+                    Vector3 moveRightVector = new Vector3(moveSpeed, 0);
+
+                    transform.Translate(moveRightVector);
+
+                    bool areWeNearTheRightEndOfTheScreen = positionTreshholds.RightTreshhold >= (this.cameraWidth - 1.5f) * (1.0f - positionTreshholds.HorizontalTreshhold);
+
+                    if (transform.position.x > positionTreshholds.RightTreshhold && !areWeNearTheRightEndOfTheScreen)
+                    {
+                        this.MoveEnvironment(moveRightVector);
+                    }
                 }
             }
 
-            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) // Stop moving if we are the end of the screen
             {
-                Vector3 moveLeftVector = new Vector3(-moveSpeed, 0);
-
-                transform.Translate(moveLeftVector);
-
-                if (transform.position.x < positionTreshholds.LeftTreshhold)
+                if (transform.position.x > this.leftGameBorderPositionX)
                 {
-                    this.MoveEnvironment(moveLeftVector);
+                    Vector3 moveLeftVector = new Vector3(-moveSpeed, 0);
+
+                    transform.Translate(moveLeftVector);
+
+                    bool areWeNearTheLeftEndOfTheScreen = positionTreshholds.LeftTreshhold <= -((this.cameraWidth - 1.5f) * (1.0f - positionTreshholds.HorizontalTreshhold));
+
+                    if (transform.position.x < positionTreshholds.LeftTreshhold && !areWeNearTheLeftEndOfTheScreen)
+                    {
+                        this.MoveEnvironment(moveLeftVector);
+                    }
                 }
             }
             #endregion
@@ -171,7 +187,7 @@ public class CharacterController : MonoBehaviour {
 
                     platformToSpawn.name = String.Format("Platform[{0}][{1}]", rowNumber, columnNumber);
                     platformToSpawn.transform.parent = this.level.transform;
-                    platformToSpawn.transform.position = new Vector3(columnNumber, rowNumber * 3, -5);
+                    platformToSpawn.transform.position = new Vector3(this.leftGameBorderPositionX + columnNumber, (rowNumber - 1) * 3, -5);
 
                     platformToSpawn.AddComponent<SpriteRenderer>();
                     platformToSpawn.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(spritePath + spriteName);
