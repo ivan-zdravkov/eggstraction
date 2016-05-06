@@ -6,10 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class CharacterController : MonoBehaviour {
-    private const string spritePath = "Sprites/Terrain/";
+    private const string terrainPath = "Sprites/Terrain/";
+    private const string materialsPath = "Materials/";
+
     private const float defaultWidth = 3840.0f;
     private const float defaultHeight = 2160.0f;
-    private const float moveSpeed = 0.05f;
+    private const float moveSpeed = 5.0f; // More speed than 5.0 causes the character pass through solid walls. Unity Bug
+    private const float jumpHeight = 500.0f;
     
     private float cameraWidth;
     private float cameraHeight;
@@ -25,6 +28,10 @@ public class CharacterController : MonoBehaviour {
     private LevelGenerator levelGenerator;
 
     private List<GameObject> instantiatedGameObjects;
+
+    private bool isGrounded = false;
+
+    private float lastFrameCharacterHeight;
 
     // Use this for initialization
     void Start () {
@@ -63,6 +70,15 @@ public class CharacterController : MonoBehaviour {
     void Update () {
         try
         {
+            if (lastFrameCharacterHeight == this.transform.position.y)
+            {
+                this.isGrounded = true;
+            }
+            else
+            {
+                lastFrameCharacterHeight = this.transform.position.y;
+            }
+
             #region CheckResize
             if (this.scale != new Vector3(defaultWidth / Screen.width, defaultHeight / Screen.height, 1f))
             {
@@ -80,36 +96,27 @@ public class CharacterController : MonoBehaviour {
             #endregion
 
             #region MovePlayer
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                Vector3 moveUpVector = new Vector3(0, moveSpeed);
-
-                transform.Translate(moveUpVector);
-
-                float theYPositionOfTheTopMostElement = this.instantiatedGameObjects.Max(x => x.transform.position.y);
-
-                //Pregenerate Elements, half a camera before needed.
-                if (this.camera.transform.position.y + this.cameraHeight > theYPositionOfTheTopMostElement)
+                if (this.isGrounded)
                 {
-                    this.levelGenerator.GenerateNewRows(1);
-                    this.InstantiateLevel(this.levelGenerator.Level.Count() - 1);
-                }
+                    this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);  
+                     
+                    float theYPositionOfTheTopMostElement = this.instantiatedGameObjects.Max(x => x.transform.position.y);
 
-                if (transform.position.y > positionTreshholds.UpperTreshhold)
-                {
-                    this.MoveEnvironment(moveUpVector);
-                }
-            }
+                    //Pregenerate Elements, half a camera before needed.
+                    if (this.camera.transform.position.y + this.cameraHeight > theYPositionOfTheTopMostElement)
+                    {
+                        this.levelGenerator.GenerateNewRows(1);
+                        this.InstantiateLevel(this.levelGenerator.Level.Count() - 1);
+                    }
 
-            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-            {
-                Vector3 moveDownVector = new Vector3(0, -moveSpeed);
+                    if (transform.position.y > positionTreshholds.UpperTreshhold)
+                    {
+                        this.MoveEnvironment(Vector3.up * jumpHeight);
+                    }
 
-                transform.Translate(moveDownVector);
-
-                if (transform.position.y < positionTreshholds.LowerTreshhold)
-                {
-                    this.MoveEnvironment(moveDownVector);
+                    this.isGrounded = false;
                 }
             }
 
@@ -117,8 +124,7 @@ public class CharacterController : MonoBehaviour {
             {
                 if (transform.position.x < this.rightGameBorderPositionX) // Stop moving if we are the end of the screen
                 {
-                    Vector3 moveRightVector = new Vector3(moveSpeed, 0);
-
+                    Vector3 moveRightVector = new Vector3(moveSpeed * Time.deltaTime, 0);
                     transform.Translate(moveRightVector);
 
                     float cameraRight = this.camera.transform.position.x + (this.cameraWidth / 2);
@@ -136,8 +142,7 @@ public class CharacterController : MonoBehaviour {
             {
                 if (transform.position.x > this.leftGameBorderPositionX)
                 {
-                    Vector3 moveLeftVector = new Vector3(-moveSpeed, 0);
-
+                    Vector3 moveLeftVector = new Vector3(-moveSpeed * Time.deltaTime, 0);
                     transform.Translate(moveLeftVector);
 
                     float cameraLeft = this.camera.transform.position.x - (this.cameraWidth / 2);
@@ -160,9 +165,14 @@ public class CharacterController : MonoBehaviour {
         }
     }
 
+    //void OnCollisionEnter(Collision other)
+    //{
+    //    this.isGrounded = true;
+    //}
+
     private void MoveEnvironment(Vector3 moveVector)
     {
-        camera.transform.Translate(moveVector);
+        camera.transform.Translate(moveVector); 
         sky.transform.Translate(moveVector);
 
         this.UpdatePositionThresholds();
@@ -203,7 +213,10 @@ public class CharacterController : MonoBehaviour {
                     platformToSpawn.transform.position = new Vector3(this.leftGameBorderPositionX + columnNumber, (rowNumber - 1) * 3, -5);
 
                     platformToSpawn.AddComponent<SpriteRenderer>();
-                    platformToSpawn.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(spritePath + spriteName);
+                    platformToSpawn.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(terrainPath + spriteName);
+
+                    platformToSpawn.AddComponent<BoxCollider>();
+                    platformToSpawn.GetComponent<BoxCollider>().material = Resources.Load<PhysicMaterial>(materialsPath + "Platform");
 
                     //GameObject instantiatedGameObject = Instantiate(platformToSpawn, transform.position, transform.rotation) as GameObject;
 
