@@ -7,6 +7,7 @@ using System.Linq;
 using UnityEngine.UI;
 
 public class CharacterController : MonoBehaviour {
+    private const string characterPath = "Sprites/Character/";
     private const string terrainPath = "Sprites/Terrain/";
     private const string materialsPath = "Materials/";
 
@@ -95,10 +96,15 @@ public class CharacterController : MonoBehaviour {
 
             if (lastFrameCharacterHeight == this.transform.position.y) // If character is staying horizontally, allow him to jump.
             {
-                this.isGrounded = true;
+                this.Land();
             }
             else
             {
+                if (lastFrameCharacterHeight > this.transform.position.y)
+                {
+                    this.Fall();
+                }
+
                 this.GetComponent<Rigidbody>().velocity += new Vector3(0, -0.1f, 0);
 
                 lastFrameCharacterHeight = this.transform.position.y;
@@ -121,9 +127,9 @@ public class CharacterController : MonoBehaviour {
             {
                 if (this.isGrounded)
                 {
-                    this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);  
-                     
-                    this.isGrounded = false;
+                    this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);
+
+                    this.Jump();
                 }
             }
 
@@ -134,6 +140,7 @@ public class CharacterController : MonoBehaviour {
                     if (this.isLeftFacing)
                     {
                         this.isLeftFacing = false;
+
                         transform.localRotation = Quaternion.Euler(0, 180, 0);
                     }
 
@@ -220,8 +227,27 @@ public class CharacterController : MonoBehaviour {
 
         if (top)
         {
-            this.isGrounded = true; 
+            this.Land();
         } */
+    }
+
+    private void Jump()
+    {
+        this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character Jump");
+
+        this.isGrounded = false;
+    }
+
+    private void Fall()
+    {
+        this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character Fall");
+    }
+
+    private void Land()
+    {
+        this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character");
+
+        this.isGrounded = true;
     }
 
     private void MoveEnvironment(Vector3 moveVector)
