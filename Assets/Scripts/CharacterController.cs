@@ -37,6 +37,10 @@ public class CharacterController : MonoBehaviour {
 
     private bool isLeftFacing = true;
     private bool isGrounded = false;
+    private bool isFalling = true;
+
+    private int shouldWalkCounter = 1;
+    private int walkingState = 1;
     private int landingCounter = 1;
 
     private float lastFrameCharacterHeight;
@@ -107,6 +111,8 @@ public class CharacterController : MonoBehaviour {
                 {
                     landingCounter++;
                 }
+
+                this.isFalling = false;
             }
             else
             {
@@ -114,7 +120,13 @@ public class CharacterController : MonoBehaviour {
 
                 if (lastFrameCharacterHeight > this.transform.position.y)
                 {
+                    this.isFalling = true;
+
                     this.Fall();
+                }
+                else
+                {
+                    this.isFalling = false;
                 }
 
                 this.GetComponent<Rigidbody>().velocity += new Vector3(0, -0.1f, 0);
@@ -156,6 +168,8 @@ public class CharacterController : MonoBehaviour {
                         transform.localRotation = Quaternion.Euler(0, 180, 0);
                     }
 
+                    WalkAnimation();
+
                     Vector3 moveRightVector = new Vector3(moveSpeed * Time.deltaTime, 0);
                     transform.Translate(-moveRightVector); // Wibbly Woobly directional change fenomenal
 
@@ -179,6 +193,8 @@ public class CharacterController : MonoBehaviour {
                         this.isLeftFacing = true;
                         transform.localRotation = Quaternion.Euler(0, 0, 0);
                     }
+
+                    WalkAnimation();
 
                     Vector3 moveLeftVector = new Vector3(moveSpeed * Time.deltaTime, 0);
                     transform.Translate(-moveLeftVector); // Wibbly Woobly directional change fenomenal
@@ -296,11 +312,37 @@ public class CharacterController : MonoBehaviour {
 
     private void Land(bool groundCharacter)
     {
-        this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character");
+        this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character " + this.walkingState);
 
         if (groundCharacter)
         {
             this.isGrounded = true;
+        }
+    }
+
+    private void WalkAnimation()
+    {
+        if (this.isGrounded && !this.isFalling)
+        {
+            if (this.shouldWalkCounter == 5)
+            {
+                if (this.walkingState < 4)
+                {
+                    this.walkingState++;
+                }
+                else
+                {
+                    this.walkingState = 1;
+                }
+
+                this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character " + this.walkingState);
+
+                this.shouldWalkCounter = 1;
+            }
+            else
+            {
+                this.shouldWalkCounter++;
+            } 
         }
     }
 
