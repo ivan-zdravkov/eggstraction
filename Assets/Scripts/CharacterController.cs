@@ -37,6 +37,7 @@ public class CharacterController : MonoBehaviour {
 
     private bool isLeftFacing = true;
     private bool isGrounded = false;
+    private int landingCounter = 1;
 
     private float lastFrameCharacterHeight;
 
@@ -96,10 +97,21 @@ public class CharacterController : MonoBehaviour {
 
             if (lastFrameCharacterHeight == this.transform.position.y) // If character is staying horizontally, allow him to jump.
             {
-                this.Land();
+                if (landingCounter == 3)
+                {
+                    this.Land(true);
+
+                    landingCounter = 1;
+                }
+                else
+                {
+                    landingCounter++;
+                }
             }
             else
             {
+                landingCounter = 1;
+
                 if (lastFrameCharacterHeight > this.transform.position.y)
                 {
                     this.Fall();
@@ -227,8 +239,47 @@ public class CharacterController : MonoBehaviour {
 
         if (top)
         {
-            this.Land();
+            this.Land(true);
         } */
+
+        Collider collider = collision.collider;
+        bool collideFromLeft = false;
+        bool collideFromTop = false;
+        bool collideFromRight = false;
+        bool collideFromBottom = false;
+
+        float RectWidth = this.GetComponent<Collider>().bounds.size.x;
+        float RectHeight = this.GetComponent<Collider>().bounds.size.y;
+        float circleRad = collider.bounds.size.x;
+
+        Vector3 contactPoint = collision.contacts[0].point;
+        Vector3 center = collider.bounds.center;
+
+        if (contactPoint.y > center.y && //checks that circle is on top of rectangle
+            (contactPoint.x < center.x + RectWidth / 2 && contactPoint.x > center.x - RectWidth / 2))
+        {
+            collideFromTop = true;
+        }
+        else if (contactPoint.y < center.y &&
+            (contactPoint.x < center.x + RectWidth / 2 && contactPoint.x > center.x - RectWidth / 2))
+        {
+            collideFromBottom = true;
+        }
+        else if (contactPoint.x > center.x &&
+            (contactPoint.y < center.y + RectHeight / 2 && contactPoint.y > center.y - RectHeight / 2))
+        {
+            collideFromRight = true;
+        }
+        else if (contactPoint.x < center.x &&
+            (contactPoint.y < center.y + RectHeight / 2 && contactPoint.y > center.y - RectHeight / 2))
+        {
+            collideFromLeft = true;
+        }
+
+        if (collideFromTop)
+        {
+            this.Land(true);
+        }
     }
 
     private void Jump()
@@ -243,11 +294,14 @@ public class CharacterController : MonoBehaviour {
         this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character Fall");
     }
 
-    private void Land()
+    private void Land(bool groundCharacter)
     {
         this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character");
 
-        this.isGrounded = true;
+        if (groundCharacter)
+        {
+            this.isGrounded = true;
+        }
     }
 
     private void MoveEnvironment(Vector3 moveVector)
