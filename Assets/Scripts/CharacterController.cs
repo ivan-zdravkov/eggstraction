@@ -13,7 +13,7 @@ public class CharacterController : MonoBehaviour {
     private const float defaultWidth = 3840.0f;
     private const float defaultHeight = 2160.0f;
     private const float moveSpeed = 5.0f; // More speed than 5.0 causes the character pass through solid walls. Unity Bug
-    private const float jumpHeight = 600.0f;
+    private const float jumpHeight = 500.0f;
     
     private float cameraWidth;
     private float cameraHeight;
@@ -34,6 +34,7 @@ public class CharacterController : MonoBehaviour {
 
     private List<GameObject> instantiatedGameObjects;
 
+    private bool isLeftFacing = true;
     private bool isGrounded = false;
 
     private float lastFrameCharacterHeight;
@@ -130,8 +131,14 @@ public class CharacterController : MonoBehaviour {
             {
                 if (transform.position.x < this.rightGameBorderPositionX) // Stop moving if we are the end of the screen
                 {
+                    if (this.isLeftFacing)
+                    {
+                        this.isLeftFacing = false;
+                        transform.localRotation = Quaternion.Euler(0, 180, 0);
+                    }
+
                     Vector3 moveRightVector = new Vector3(moveSpeed * Time.deltaTime, 0);
-                    transform.Translate(moveRightVector);
+                    transform.Translate(-moveRightVector); // Wibbly Woobly directional change fenomenal
 
                     float cameraRight = this.camera.transform.position.x + (this.cameraWidth / 2);
 
@@ -148,8 +155,14 @@ public class CharacterController : MonoBehaviour {
             {
                 if (transform.position.x > this.leftGameBorderPositionX)
                 {
-                    Vector3 moveLeftVector = new Vector3(-moveSpeed * Time.deltaTime, 0);
-                    transform.Translate(moveLeftVector);
+                    if (!this.isLeftFacing)
+                    {
+                        this.isLeftFacing = true;
+                        transform.localRotation = Quaternion.Euler(0, 0, 0);
+                    }
+
+                    Vector3 moveLeftVector = new Vector3(moveSpeed * Time.deltaTime, 0);
+                    transform.Translate(-moveLeftVector); // Wibbly Woobly directional change fenomenal
 
                     float cameraLeft = this.camera.transform.position.x - (this.cameraWidth / 2);
 
@@ -157,7 +170,7 @@ public class CharacterController : MonoBehaviour {
 
                     if (transform.position.x < positionTreshholds.LeftTreshhold && !areWeNearTheLeftEndOfTheScreen)
                     {
-                        this.MoveEnvironment(moveLeftVector);
+                        this.MoveEnvironment(-moveLeftVector);
                     }
                 }
             }
@@ -193,6 +206,22 @@ public class CharacterController : MonoBehaviour {
 
             throw ex;
         }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        /*Vector3 contactPoint = collision.contacts[0].point;
+        Vector3 center = collision.collider.bounds.center;
+
+        bool right = contactPoint.x > center.x && collision.collider.bounds.extents.x - Math.Abs(contactPoint.x - center.x) > -0.01f;
+        bool top = contactPoint.y > center.y && collision.collider.bounds.extents.y - Math.Abs(contactPoint.y - center.y) > -0.01f;
+        bool left = contactPoint.x < center.x && collision.collider.bounds.extents.x - Math.Abs(contactPoint.x - center.x)  > -0.01f;
+        bool under = contactPoint.y < center.y && collision.collider.bounds.extents.y - Math.Abs(contactPoint.y - center.y) > -0.01f;
+
+        if (top)
+        {
+            this.isGrounded = true; 
+        } */
     }
 
     private void MoveEnvironment(Vector3 moveVector)
@@ -238,12 +267,13 @@ public class CharacterController : MonoBehaviour {
                     platformToSpawn.transform.position = new Vector3(this.leftGameBorderPositionX + columnNumber, (rowNumber - 1) * 3, -5);
 
                     platformToSpawn.AddComponent<SpriteRenderer>();
-                    platformToSpawn.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(terrainPath + spriteName);
-
                     platformToSpawn.AddComponent<BoxCollider>();
-                    platformToSpawn.GetComponent<BoxCollider>().material = Resources.Load<PhysicMaterial>(materialsPath + "Platform");
 
-                    //GameObject instantiatedGameObject = Instantiate(platformToSpawn, transform.position, transform.rotation) as GameObject;
+                    SpriteRenderer spriteRenderer = platformToSpawn.GetComponent<SpriteRenderer>();
+                    BoxCollider boxCollider = platformToSpawn.GetComponent<BoxCollider>();
+
+                    spriteRenderer.sprite = Resources.Load<Sprite>(terrainPath + spriteName);
+                    boxCollider.material = Resources.Load<PhysicMaterial>(materialsPath + "Platform");
 
                     this.instantiatedGameObjects.Add(platformToSpawn);
                 }
