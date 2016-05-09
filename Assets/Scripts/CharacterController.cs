@@ -213,7 +213,7 @@ public class CharacterController : MonoBehaviour {
 
             if (transform.position.y > positionTreshholds.UpperTreshhold)
             {
-                this.MoveEnvironment(Vector3.up * Time.deltaTime * 2); 
+                this.MoveEnvironment(Vector3.up * Time.deltaTime * 3); 
             }
 
             float theYPositionOfTheTopMostElement = this.instantiatedGameObjects.Max(x => x.transform.position.y);
