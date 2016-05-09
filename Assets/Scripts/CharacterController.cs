@@ -5,6 +5,7 @@ using Assets.Classes;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
+using System.Threading;
 
 public class CharacterController : MonoBehaviour {
     private const string characterPath = "Sprites/Character/";
@@ -38,6 +39,7 @@ public class CharacterController : MonoBehaviour {
     private bool isLeftFacing = true;
     private bool isGrounded = false;
     private bool isFalling = true;
+    private bool canDoubleJump = true;
 
     private int shouldWalkCounter = 1;
     private int walkingState = 1;
@@ -146,6 +148,8 @@ public class CharacterController : MonoBehaviour {
             }
             #endregion
 
+            bool hasDoubleJumped = false;
+
             #region MovePlayer
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -154,6 +158,21 @@ public class CharacterController : MonoBehaviour {
                     this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);
 
                     this.Jump();
+
+                    this.canDoubleJump = this.score >= 100; // Only allow double jumping when the score is larger than 100!
+                }
+                else
+                {
+                    if (this.canDoubleJump)
+                    {
+                        this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);
+
+                        this.Jump();
+
+                        hasDoubleJumped = true;
+
+                        this.canDoubleJump = false;
+                    }
                 }
             }
 
@@ -211,7 +230,7 @@ public class CharacterController : MonoBehaviour {
             }
             #endregion
 
-            if (transform.position.y > positionTreshholds.UpperTreshhold)
+            if (transform.position.y > positionTreshholds.UpperTreshhold || hasDoubleJumped)
             {
                 this.MoveEnvironment(Vector3.up * Time.deltaTime * 3); 
             }
@@ -302,12 +321,29 @@ public class CharacterController : MonoBehaviour {
     {
         this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character Jump");
 
+        Invoke("FlyAnimation", 0.10f);
+
         this.isGrounded = false;
+    }
+
+    private void FlyAnimation()
+    {
+        if (this.GetComponent<SpriteRenderer>().sprite.name == "Character Jump")
+        {
+            Invoke("Fall", 0.05f);
+
+            Invoke("Fly", 0.15f);
+        }
     }
 
     private void Fall()
     {
         this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character Fall");
+    }
+
+    private void Fly()
+    {
+        this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character Jump");
     }
 
     private void Land(bool groundCharacter)
