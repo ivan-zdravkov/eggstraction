@@ -17,10 +17,13 @@ namespace Assets.Classes
         private int maximumSpaceLength;
         private int averageSpaceLength;
 
+        private int doublePlatformPercentageChance;
+        private int doubleSpacePercentageChance;
+
         private Random randomGenerator;
         private Platform[][] level;
         
-        public LevelGenerator(int horizontalSize, int minimumPlatformLength, int maximumPlatformLength, int minimumSpaceLength, int maximumSpaceLength)
+        public LevelGenerator(int horizontalSize, int minimumPlatformLength, int maximumPlatformLength, int minimumSpaceLength, int maximumSpaceLength, int doublePlatformPercentageChance, int doubleSpacePercentageChance)
         {
             this.horizontalSize = horizontalSize;
 
@@ -31,6 +34,9 @@ namespace Assets.Classes
             this.minimumSpaceLength = minimumSpaceLength;
             this.maximumSpaceLength = maximumSpaceLength;
             this.averageSpaceLength = (minimumSpaceLength + maximumSpaceLength) / 2;
+
+            this.doublePlatformPercentageChance = doublePlatformPercentageChance;
+            this.doubleSpacePercentageChance = doubleSpacePercentageChance;
 
             this.randomGenerator = new Random();
         }
@@ -123,9 +129,19 @@ namespace Assets.Classes
                     row.Add(row.Last().GetNextPlatform());
                 }
 
+                bool generateDoubleRow = this.randomGenerator.Next(1, 101) <= this.doublePlatformPercentageChance;
+
                 for (int i = this.minimumPlatformLength + 1; i < this.maximumPlatformLength; i++)
                 {
                     if (this.randomGenerator.Next(1, 101) <= 50)
+                    {
+                        row.Add(row.Last().GetNextPlatform());
+                    }
+                }
+
+                if (generateDoubleRow)
+                {
+                    for (int i = this.minimumPlatformLength + 1; i < this.maximumPlatformLength; i++)
                     {
                         row.Add(row.Last().GetNextPlatform());
                     }
@@ -140,9 +156,19 @@ namespace Assets.Classes
                     row.Add(null);
                 }
 
+                bool generateDoubleSpace = this.randomGenerator.Next(1, 101) <= this.doubleSpacePercentageChance;
+
                 for (int i = this.minimumSpaceLength; i < this.maximumPlatformLength; i++)
                 {
                     if (this.randomGenerator.Next(1, 101) <= 50)
+                    {
+                        row.Add(null);
+                    }
+                }
+
+                if (generateDoubleSpace)
+                {
+                    for (int i = this.minimumSpaceLength; i < this.maximumPlatformLength; i++)
                     {
                         row.Add(null);
                     }

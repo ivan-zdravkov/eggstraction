@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
 using System.Threading;
+using Leap;
 
-public class CharacterController : MonoBehaviour {
+public class CharacterController : MonoBehaviour
+{
     private const string characterPath = "Sprites/Character/";
     private const string terrainPath = "Sprites/Terrain/";
     private const string materialsPath = "Materials/";
@@ -33,6 +35,8 @@ public class CharacterController : MonoBehaviour {
     private GameObject scoreText;
     private PositionTreshholds positionTreshholds;
     private LevelGenerator levelGenerator;
+
+    Controller LEAPcontroller;
 
     private List<GameObject> instantiatedGameObjects;
 
@@ -65,7 +69,7 @@ public class CharacterController : MonoBehaviour {
 
             this.positionTreshholds = new PositionTreshholds(25, 25);
 
-            this.levelGenerator = new LevelGenerator(10, 4, 8, 4, 8);
+            this.levelGenerator = new LevelGenerator(10, 4, 8, 4, 8, 5, 15);
             this.levelGenerator.GenerateInnitialLevel(10);
 
             this.rightGameBorderPositionX = this.levelGenerator.MaximumRowLength / 2;
@@ -74,6 +78,8 @@ public class CharacterController : MonoBehaviour {
             this.InstantiateLevel(0);
 
             this.UpdatePositionThresholds();
+
+            this.LEAPcontroller = new Controller();
         }
         catch (Exception ex)
         {
@@ -150,83 +156,62 @@ public class CharacterController : MonoBehaviour {
 
             bool hasDoubleJumped = false;
 
-            #region MovePlayer
-            if (Input.GetKeyDown(KeyCode.Space))
+            #region LeapMovement
+            if (LEAPcontroller.IsConnected)
             {
-                if (this.isGrounded)
-                {
-                    this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);
+                Frame frame = LEAPcontroller.Frame();
 
-                    this.Jump();
+                Hand leftHand = frame.Hands.FirstOrDefault(x => x.IsLeft);
+                Hand rightHand = frame.Hands.FirstOrDefault(x => x.IsRight);
 
-                    this.canDoubleJump = this.score >= 100; // Only allow double jumping when the score is larger than 100!
-                }
-                else
+                MovementDirectionEnum moveDirection;
+
+                if (leftHand != null)
                 {
-                    if (this.canDoubleJump)
+                    Vector wristPosition = leftHand.WristPosition;
+
+                    float rotation = Quaternion.Euler(leftHand.Direction.Pitch, leftHand.Direction.Yaw, leftHand.PalmNormal.Roll).z;
+
+                    if (rotation < -0.001f || rotation > 0.001f)
                     {
-                        this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);
+                        moveDirection = rotation > 0 ? MovementDirectionEnum.Left : MovementDirectionEnum.Right;
 
-                        this.Jump();
+                        if (moveDirection == MovementDirectionEnum.Left)
+                        {
+                            MovePlayerLeft();
+                        }
 
-                        hasDoubleJumped = true;
-
-                        this.canDoubleJump = false;
+                        if (moveDirection == MovementDirectionEnum.Right)
+                        {
+                            MovePlayerRight();
+                        }
                     }
                 }
+
+                if (rightHand != null)
+                {
+                    if (rightHand.PinchStrength >= 0.75f)
+                    {
+                        hasDoubleJumped = Jump();
+                    }
+                }
+            }
+            #endregion
+
+            #region KeyboardMovement
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                hasDoubleJumped = Jump();
             }
 
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
             {
-                if (transform.position.x < this.rightGameBorderPositionX) // Stop moving if we are the end of the screen
-                {
-                    if (this.isLeftFacing)
-                    {
-                        this.isLeftFacing = false;
-
-                        transform.localRotation = Quaternion.Euler(0, 180, 0);
-                    }
-
-                    WalkAnimation();
-
-                    Vector3 moveRightVector = new Vector3(moveSpeed * Time.deltaTime, 0);
-                    transform.Translate(-moveRightVector); // Wibbly Woobly directional change fenomenal
-
-                    float cameraRight = this.camera.transform.position.x + (this.cameraWidth / 2);
-
-                    bool areWeNearTheRightEndOfTheScreen = cameraRight >= this.rightGameBorderPositionX;
-
-                    if (transform.position.x > positionTreshholds.RightTreshhold && !areWeNearTheRightEndOfTheScreen)
-                    {
-                        this.MoveEnvironment(moveRightVector);
-                    }
-                }
+                MovePlayerRight();
             }
 
             if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) // Stop moving if we are the end of the screen
             {
-                if (transform.position.x > this.leftGameBorderPositionX)
-                {
-                    if (!this.isLeftFacing)
-                    {
-                        this.isLeftFacing = true;
-                        transform.localRotation = Quaternion.Euler(0, 0, 0);
-                    }
-
-                    WalkAnimation();
-
-                    Vector3 moveLeftVector = new Vector3(moveSpeed * Time.deltaTime, 0);
-                    transform.Translate(-moveLeftVector); // Wibbly Woobly directional change fenomenal
-
-                    float cameraLeft = this.camera.transform.position.x - (this.cameraWidth / 2);
-
-                    bool areWeNearTheLeftEndOfTheScreen = cameraLeft <= this.leftGameBorderPositionX;
-
-                    if (transform.position.x < positionTreshholds.LeftTreshhold && !areWeNearTheLeftEndOfTheScreen)
-                    {
-                        this.MoveEnvironment(-moveLeftVector);
-                    }
-                }
+                MovePlayerLeft();
             }
             #endregion
 
@@ -259,6 +244,88 @@ public class CharacterController : MonoBehaviour {
             string message = ex.Message;
 
             throw ex;
+        }
+    }
+
+    private bool Jump()
+    {
+        var hasDoubleJumped = false;
+
+        if (this.isGrounded)
+        {
+            this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);
+
+            this.JumpAnimation();
+
+            this.canDoubleJump = this.score >= 100; // Only allow double jumping when the score is larger than 100!
+        }
+        else
+        {
+            if (this.canDoubleJump)
+            {
+                this.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpHeight);
+
+                this.JumpAnimation();
+
+                hasDoubleJumped = true;
+
+                this.canDoubleJump = false;
+            }
+        }
+
+        return hasDoubleJumped;
+    }
+
+    public void MovePlayerLeft()
+    {
+        if (transform.position.x > this.leftGameBorderPositionX)
+        {
+            if (!this.isLeftFacing)
+            {
+                this.isLeftFacing = true;
+                transform.localRotation = Quaternion.Euler(0, 0, 0);
+            }
+
+            WalkAnimation();
+
+            Vector3 moveLeftVector = new Vector3(moveSpeed * Time.deltaTime, 0);
+            transform.Translate(-moveLeftVector); // Wibbly Woobly directional change fenomenal
+
+            float cameraLeft = this.camera.transform.position.x - (this.cameraWidth / 2);
+
+            bool areWeNearTheLeftEndOfTheScreen = cameraLeft <= this.leftGameBorderPositionX;
+
+            if (transform.position.x < positionTreshholds.LeftTreshhold && !areWeNearTheLeftEndOfTheScreen)
+            {
+                this.MoveEnvironment(-moveLeftVector);
+            }
+        }
+    }
+
+    public void MovePlayerRight()
+    {
+        if (transform.position.x < this.rightGameBorderPositionX) // Stop moving if we are the end of the screen
+        {
+            if (this.isLeftFacing)
+            {
+                this.isLeftFacing = false;
+
+                transform.localRotation = Quaternion.Euler(0, 180, 0);
+            }
+
+            WalkAnimation();
+
+            Vector3 moveRightVector = new Vector3(moveSpeed * Time.deltaTime, 0);
+            transform.Translate(-moveRightVector); // Wibbly Woobly directional change fenomenal
+
+            float cameraRight = this.camera.transform.position.x + (this.cameraWidth / 2);
+
+            bool areWeNearTheRightEndOfTheScreen = cameraRight >= this.rightGameBorderPositionX;
+
+            if (transform.position.x > positionTreshholds.RightTreshhold && !areWeNearTheRightEndOfTheScreen)
+            {
+                this.MoveEnvironment(moveRightVector);
+            }
         }
     }
 
@@ -317,7 +384,7 @@ public class CharacterController : MonoBehaviour {
         }
     }
 
-    private void Jump()
+    private void JumpAnimation()
     {
         this.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(characterPath + "Character Jump");
 
