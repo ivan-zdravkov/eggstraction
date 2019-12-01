@@ -17,6 +17,3 @@ Eggstraction is a [Unity3D](https://unity3d.com/) platformer game, supporting [L
 * Move Right - Tilt your left wrist to the lift
 * Jump - Pinch any of the fingers of your right hand
 * Double Jump - Pinch any of the fingers of your right hand twice
-
-## Demo
-[https://eggstraction.unity.zdravkov.eu](https://eggstraction.unity.zdravkov.eu)
